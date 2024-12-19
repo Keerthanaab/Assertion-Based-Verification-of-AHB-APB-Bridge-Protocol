@@ -1,0 +1,2 @@
+# Assertion-Based-Verification-of-AHB-APB-Bridge-Protocol
+The AHB-APB bridge serves as a critical interface, enabling seamless communication between the high-performance Advanced High-performance Bus (AHB) and the power-efficient Advanced Peripheral Bus (APB). The repository outlines the strategies and methodologies used to ensure the bridge meets all design specifications and operational requirements.
