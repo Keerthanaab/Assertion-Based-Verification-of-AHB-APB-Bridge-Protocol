@@ -1,1 +1,8 @@
+../RTL/AHB_slave_interface.sv
+../RTL/APB_FSM_Controller.sv
+../RTL/Bridge_Top.sv
+../RTL/AHB_assertions.sva
+../RTL/APB_assertions.sva
+../RTL/bridge_assertions.sva
+../RTL/bindfile.sva
 
