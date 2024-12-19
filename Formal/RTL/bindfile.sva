@@ -1,0 +1,6 @@
+bind AHB_slave_interface AHB_assertions i_fpv(.*);
+bind APB_FSM_Controller APB_assertions j_fpv(.*);
+bind Bridge_Top bridge_assertions k_fpv(.*);
+
+
+

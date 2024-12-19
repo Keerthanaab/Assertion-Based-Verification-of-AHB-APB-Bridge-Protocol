@@ -1,0 +1,52 @@
+module AHB_assertions(
+    input Hclk,
+    input Hresetn,
+    input Hreadyin,
+    input [1:0] Htrans,
+    input [31:0] Haddr,Hwdata,Prdata,
+    input valid,
+    input [31:0] Haddr1,
+    input [31:0] Haddr2,
+    input [31:0] Hwdata1,
+    input [31:0] Hwdata2,
+    input Hwritereg,
+    input [2:0] tempselx
+);
+
+//address pipleline
+property addrpipe;
+  @(posedge Hclk) disable iff(!Hresetn)
+  Haddr1 == Haddr |=> Haddr2 == Haddr1;
+endproperty
+
+//data pipepline
+property datapipe;
+  @(posedge Hclk) disable iff(!Hresetn)
+  Hwdata1 == Hwdata |=> Hwdata2 == Hwdata1;
+endproperty
+
+//address range for slave1
+property addrrange1;
+  @(posedge Hclk) disable iff(!Hresetn)
+  (Haddr >= 32'h8000_0000 && Haddr < 32'h8400_0000) |-> tempselx == 3'b001;
+endproperty
+
+//address range for slave2
+property addrrange2;
+  @(posedge Hclk) disable iff(!Hresetn)
+  (Haddr >= 32'h8400_0000 && Haddr < 32'h8800_0000) |-> tempselx == 3'b010;
+endproperty
+
+//address range for slave3
+property addrrange3;
+  @(posedge Hclk) disable iff(!Hresetn)
+  (Haddr >= 32'h8800_0000 && Haddr < 32'h8C00_0000) |-> tempselx == 3'b100;
+endproperty
+
+a1:assert property(addrpipe);
+a2:assert property(datapipe);
+a3:assert property(addrrange1);
+a4:assert property(addrrange2);
+a5:assert property(addrrange3);
+endmodule
+

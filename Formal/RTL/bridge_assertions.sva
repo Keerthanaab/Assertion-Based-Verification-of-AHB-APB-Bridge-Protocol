@@ -1,0 +1,131 @@
+module bridge_assertions(
+input logic Hclk,
+input logic Hresetn,
+input logic Hwrite,
+input logic Hreadyin,
+input logic [31:0] Hwdata,
+input logic [31:0] Haddr,
+input logic [1:0] Htrans,
+input logic [31:0] Prdata,
+input logic [2:0] Pselx,
+input logic [31:0] Paddr,
+input logic [31:0] Pwdata,
+input logic Penable,
+input logic Pwrite,
+input logic Hreadyout,
+input logic [1:0] Hresp,
+input logic [31:0] Hrdata);
+
+//reset assertions
+property resetpaddr;
+  @(posedge Hclk)
+  ($rose(Hresetn) |-> Paddr==0);
+endproperty
+property resetpenable;
+  @(posedge Hclk)
+  ($rose(Hresetn) |-> Penable==0);
+endproperty
+property resetpwrite;
+@(posedge Hclk)
+  ($rose(Hresetn) |-> Pwrite==0);
+endproperty
+property resetpwdata;
+  @(posedge Hclk)
+  ($rose(Hresetn) |-> Pwdata==0);
+endproperty
+property resetpselx;
+  @(posedge Hclk)
+  ($rose(Hresetn) |-> Pselx==0);
+endproperty
+
+//Hrdata equal to Prdata
+property readdata;
+  @(posedge Hclk) disable iff(!Hresetn)
+  Penable |-> Hrdata==Prdata;
+endproperty
+
+//Penable cannot high for 2 cycles
+property validpenable;
+  @(posedge Hclk) disable iff(!Hresetn)
+  Penable |=> !Penable;
+endproperty
+
+//selecting only one slave
+property validpselx;
+  @(posedge Hclk) disable iff(!Hresetn)
+  $onehot0(Pselx);
+endproperty
+
+//Sequence for addr ranges
+sequence addr0range;
+  (Haddr >= 32'h8000_0000 && Haddr < 32'h8400_0000);
+endsequence
+sequence addr1range;
+  (Haddr >= 32'h8400_0000 && Haddr < 32'h8800_0000);
+endsequence
+sequence addr2range;
+  (Haddr >= 32'h8800_0000 && Haddr < 32'h8C00_0000);
+endsequence
+
+
+//write sequence
+sequence writeseq;
+  Hwrite && ((Pselx == 0) || (Pselx == 1) || (Pselx == 2) || (Pselx == 4)) && !Penable ##1 Hwrite && ((Pselx == 0) || (Pselx == 1) || (Pselx == 2) || (Pselx == 4)) && Penable;
+endsequence
+//read sequeence
+sequence readseq;
+  !Hwrite && ((Pselx == 0) || (Pselx == 1) || (Pselx == 2) || (Pselx == 3)) && !Penable ##1 !Hwrite && ((Pselx == 0) || (Pselx == 1) || (Pselx == 2) || (Pselx == 3)) && Penable;
+endsequence
+//write followed by read
+property writeread;
+  @(posedge Hclk) disable iff(!Hresetn)
+  writeseq ##1 readseq |=> $past(Paddr,2) == $past(Paddr);
+endproperty
+
+//pwrite same as hwrite for read
+property phwriteread;
+  @(posedge Hclk) disable iff(!Hresetn)
+  !Hwrite && Hreadyin |=> (Pwrite==0);
+endproperty
+
+
+//address range 
+property addressrange;
+  @(posedge Hclk) disable iff(!Hresetn) (Haddr >= 32'h8000_0000 && Haddr < 32'h8C00_0000);
+endproperty
+
+//valid Hwdata
+property validhwdata;
+  @(posedge Hclk) disable iff(!Hresetn) (Hwrite |=> !$isunknown(Hwdata));
+endproperty
+
+//valid Htrans
+property validhtrans;
+  @(posedge Hclk) disable iff(!Hresetn) (Htrans == 2'b10 || 2'b11);
+endproperty
+
+//hwrite and hreadyin
+property validhreadyin;
+  @(posedge Hclk) disable iff(!Hresetn) (Hwrite |-> Hreadyin ##1 Hreadyin);
+endproperty
+
+
+a1:assert property(resetpaddr);
+a2:assert property(resetpenable);
+a3:assert property(resetpwrite);
+a4:assert property(resetpwdata);
+a5:assert property(resetpselx);
+a6:assert property(readdata);
+a7:assert property(validpenable);
+a8:assert property(validpselx);
+a9:assert property(writeread);
+a10:assert property(phwriteread);
+
+as1:assume property(addressrange);
+as2:assume property(validhwdata);
+as3:assume property(validhtrans);
+as4:assume property(validhreadyin);
+
+
+endmodule
+
